@@ -31,6 +31,7 @@ export function Map(): JSX.Element {
             }
 
             if (tileRef.current) {
+                // TODO: offsetを含んだもので計算しているせいでおかしいかも。2レンダリングに1回しかうまくいかない
                 const rect = tileRef.current.getBoundingClientRect();
                 console.log(rect);
                 setMapOffset({ x: -rect.left, y: -rect.top });
