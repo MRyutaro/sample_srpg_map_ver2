@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import image from "../image1.png";
 
 // マップ全体の設定
@@ -47,21 +47,24 @@ export function Map(): JSX.Element {
             console.log(mapSize.width, mapSize.height);
 
             // ここで計算
-            const mapTilesXLen = Math.floor(mapSize.width / (tileHalfWidth * 2)) + 1;
-            const mapTilesYLen = Math.floor(mapSize.height / (tileHalfHeight * 2)) + 1;
+            const mapTilesXLen = Math.floor(mapSize.width / (tileHalfWidth * 2)) + 2;
+            const mapTilesYLen = Math.floor(mapSize.height / (tileHalfHeight * 2)) + 3;
             setMapTilesXLen(mapTilesXLen);
             setMapTilesYLen(mapTilesYLen);
         }
     }, [mapSize]);
 
     // タイルがクリックされたときに選択状態にする
-    const handleTileClick = (x: number, y: number) => {
-        if (selectedTile && selectedTile[0] === x && selectedTile[1] === y) {
-            setSelectedTile(null);
-        } else {
-            setSelectedTile([x, y]);
-        }
-    };
+    const handleTileClick = useCallback(
+        (x: number, y: number) => {
+            if (selectedTile && selectedTile[0] === x && selectedTile[1] === y) {
+                setSelectedTile(null);
+            } else {
+                setSelectedTile([x, y]);
+            }
+        },
+        [selectedTile]
+    );
 
     return (
         <div
