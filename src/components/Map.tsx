@@ -49,7 +49,7 @@ export function Map(): JSX.Element {
 
             // ここで計算
             const mapTilesXLen = Math.floor(mapSize.width / (tileHalfWidth * 2)) + 2;
-            const mapTilesYLen = Math.floor(mapSize.height / (tileHalfHeight * 2)) + 3;
+            const mapTilesYLen = Math.floor(mapSize.height / (tileHalfHeight * 2)) + 4;
             setMapTilesXLen(mapTilesXLen);
             setMapTilesYLen(mapTilesYLen);
         }
@@ -77,6 +77,19 @@ export function Map(): JSX.Element {
                 overflow: "hidden",
             }}
         >
+            <div
+                style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    zIndex: 2,
+                    backgroundColor: "lightgray",
+                    padding: "5px",
+                }}
+            >
+                横のタイル数: {mapTilesXLen}, 縦のタイル数: {mapTilesYLen}
+            </div>
+
             {/* gridを使って実装 */}
             {Array.from({ length: mapTilesXLen + mapTilesYLen }, (_, y) =>
                 Array.from({ length: mapTilesXLen + mapTilesYLen }, (_, x) => {
