@@ -22,6 +22,7 @@ export function Map(): JSX.Element {
     const [selectedTile, setSelectedTile] = useState<[number, number] | null>(null);
     const [mapOffset, setMapOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
+
     // リサイズ時の処理
     useEffect(() => {
         const handleResize = () => {
@@ -87,7 +88,8 @@ export function Map(): JSX.Element {
                     padding: "5px",
                 }}
             >
-                横のタイル数: {mapTilesXLen}, 縦のタイル数: {mapTilesYLen}
+                横のタイル数: {mapTilesXLen}, 縦のタイル数: {mapTilesYLen} <br />
+                {selectedTile && `選択されたタイル: (${selectedTile[0]}, ${selectedTile[1]})`}
             </div>
 
             {/* gridを使って実装 */}
