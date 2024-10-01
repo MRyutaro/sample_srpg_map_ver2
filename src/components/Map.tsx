@@ -22,7 +22,6 @@ export function Map(): JSX.Element {
     const [selectedTile, setSelectedTile] = useState<[number, number] | null>(null);
     const [mapOffset, setMapOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
-
     // リサイズ時の処理
     useEffect(() => {
         const handleResize = () => {
