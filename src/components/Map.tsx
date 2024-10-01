@@ -32,6 +32,7 @@ export function Map(): JSX.Element {
 
             if (tileRef.current) {
                 const rect = tileRef.current.getBoundingClientRect();
+                console.log(rect);
                 setMapOffset({ x: -rect.left, y: -rect.top });
             }
         };
@@ -72,6 +73,8 @@ export function Map(): JSX.Element {
             style={{
                 width: "100%",
                 height: "100%",
+                position: "relative",
+                overflow: "hidden",
             }}
         >
             {/* gridを使って実装 */}
@@ -87,7 +90,7 @@ export function Map(): JSX.Element {
                     const tileTopOffset = isSelected ? SELECTED_TILE_MOVE_Y : 0;
 
                     // [1, mapTilesXLen]の場合はisTargetTileをtrueにする
-                    const isTargetTile = x === 1 && y === mapTilesXLen;
+                    const isTargetTile = x === 2 && y === mapTilesXLen;
 
                     return (
                         <div
