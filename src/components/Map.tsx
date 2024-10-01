@@ -2,13 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import image from "../image1.png";
 
 // マップ全体の設定
-const MAP_TILES_X_LEN = 10; // マップの横のタイル数（windowのX軸方向）
-const MAP_TILES_Y_LEN = 20; // マップの縦のタイル数（windowのY軸方向）
-const TILE_SIZE = 100; // タイルのサイズ
+const TILE_SIDE_LENGTH = 100; // タイルのサイズ
 const ROTATE_X = 66; // マップの平たさ具合(deg)
-const A = TILE_SIZE * 0.71; // タイルを敷き詰めるための補正値。√2/2 ≒ 0.71。これを変えるとタイル同士の間隔が変わる。
-const MAP_LEFT_OFFSET = 0; // マップの左のオフセット
-const MAP_TOP_OFFSET = 0; // マップの上のオフセット
 
 // タイルの設定
 const SELECTED_TILE_MOVE_Y = -5; // タイルが選択されたときのY軸の移動量(px)
@@ -17,8 +12,47 @@ const IMAGE_SIZE = 524; // タイルに埋め込む画像のサイズ
 const IMAGE_POSITION = -296; // 画像の位置
 
 export function Map(): JSX.Element {
+    const mapRef = useRef<HTMLDivElement | null>(null); // マップ全体のref
+    const tileRef = useRef<HTMLDivElement | null>(null); // [1, MAP_TILES_X_LEN_PLUS_ONE]のタイルのref
+    const [tileHalfWidth, setTileHalfWidth] = useState<number>(TILE_SIDE_LENGTH / Math.sqrt(2));
+    const [tileHalfHeight, setTileHalfHeight] = useState<number>(TILE_SIDE_LENGTH / (Math.sqrt(2) * Math.tan((ROTATE_X * Math.PI) / 180)));
+    const [mapTilesXLen, setMapTilesXLen] = useState<number>(0);
+    const [mapTilesYLen, setMapTilesYLen] = useState<number>(0);
+    const [mapSize, setMapSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
     const [selectedTile, setSelectedTile] = useState<[number, number] | null>(null);
-    const tileRef = useRef<HTMLDivElement | null>(null); // [1, MAP_TILES_X_LEN]のタイル用のuseRef
+    const [mapOffset, setMapOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+
+    // リサイズ時の処理
+    useEffect(() => {
+        const handleResize = () => {
+            if (mapRef.current) {
+                const rect = mapRef.current.getBoundingClientRect();
+                setMapSize({ width: rect.width, height: rect.height });
+            }
+
+            if (tileRef.current) {
+                const rect = tileRef.current.getBoundingClientRect();
+                setMapOffset({ x: -rect.left, y: -rect.top });
+            }
+        };
+        handleResize();
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
+    // mapSizeが変更されたときにmapTilesXLenとmapTilesYLenを更新する
+    useEffect(() => {
+        if (mapSize.width > 0 && mapSize.height > 0) {
+            // マップの幅と高さに基づいてタイル数を計算する
+            console.log(mapSize.width, mapSize.height);
+
+            // ここで計算
+            const mapTilesXLen = Math.floor(mapSize.width / (tileHalfWidth * 2)) + 1;
+            const mapTilesYLen = Math.floor(mapSize.height / (tileHalfHeight * 2)) + 1;
+            setMapTilesXLen(mapTilesXLen);
+            setMapTilesYLen(mapTilesYLen);
+        }
+    }, [mapSize]);
 
     // タイルがクリックされたときに選択状態にする
     const handleTileClick = (x: number, y: number) => {
@@ -31,41 +65,42 @@ export function Map(): JSX.Element {
 
     return (
         <div
+            ref={mapRef}
             style={{
                 width: "100%",
                 height: "100%",
             }}
         >
             {/* gridを使って実装 */}
-            {Array.from({ length: MAP_TILES_Y_LEN + MAP_TILES_X_LEN }, (_, y) =>
-                Array.from({ length: MAP_TILES_Y_LEN + MAP_TILES_X_LEN }, (_, x) => {
-                    if (x + y <= MAP_TILES_X_LEN || x + y >= MAP_TILES_X_LEN + 2 * MAP_TILES_Y_LEN) {
+            {Array.from({ length: mapTilesXLen + mapTilesYLen }, (_, y) =>
+                Array.from({ length: mapTilesXLen + mapTilesYLen }, (_, x) => {
+                    if (x + y <= mapTilesXLen || x + y >= mapTilesXLen + 2 * mapTilesYLen) {
                         return null;
-                    } else if (x - y <= -MAP_TILES_X_LEN || x - y >= MAP_TILES_X_LEN) {
+                    } else if (x - y <= -mapTilesXLen || x - y >= mapTilesXLen) {
                         return null;
                     }
 
                     const isSelected = selectedTile?.[0] === x && selectedTile?.[1] === y;
                     const tileTopOffset = isSelected ? SELECTED_TILE_MOVE_Y : 0;
 
-                    // [1, MAP_TILES_X_LEN]のタイルにrefを設定
-                    const isTargetTile = x === 1 && y === MAP_TILES_X_LEN;
+                    // [1, mapTilesXLen]の場合はisTargetTileをtrueにする
+                    const isTargetTile = x === 1 && y === mapTilesXLen;
 
                     return (
                         <div
                             key={`${x},${y}`}
-                            ref={isTargetTile ? tileRef : null} // 対象のタイルにrefを設定
+                            ref={isTargetTile ? tileRef : null}
                             style={{
-                                width: TILE_SIZE,
-                                height: TILE_SIZE,
+                                width: TILE_SIDE_LENGTH,
+                                height: TILE_SIDE_LENGTH,
                                 position: "absolute",
                                 backgroundColor: "lightblue",
-                                left: `${MAP_LEFT_OFFSET + x * A - y * A}px`,
+                                left: `${mapOffset.x + x * tileHalfWidth - y * tileHalfWidth}px`,
                                 top: `${
-                                    MAP_TOP_OFFSET +
+                                    mapOffset.y +
                                     tileTopOffset +
-                                    y * (A * Math.cos((ROTATE_X * Math.PI) / 180)) +
-                                    x * (A * Math.cos((ROTATE_X * Math.PI) / 180))
+                                    y * (tileHalfWidth * Math.cos((ROTATE_X * Math.PI) / 180)) +
+                                    x * (tileHalfWidth * Math.cos((ROTATE_X * Math.PI) / 180))
                                 }px`,
                                 transform: `rotateX(${ROTATE_X}deg) rotateZ(45deg)`,
                                 border: isSelected ? "1px solid red" : "1px solid black",
@@ -73,7 +108,7 @@ export function Map(): JSX.Element {
                                 transition: "top 0.2s ease, box-shadow 0.2s ease",
                                 cursor: "pointer",
                             }}
-                            onClick={() => handleTileClick(x, y)} // クリックイベント
+                            onClick={() => handleTileClick(x, y)}
                         >
                             <div>
                                 {x},{y}
